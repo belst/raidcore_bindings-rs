@@ -1,0 +1,3 @@
+[submodule "RCGG-lib-nexus-api"]
+	path = RCGG-lib-nexus-api
+	url = https://github.com/RaidcoreGG/RCGG-lib-nexus-api.git
