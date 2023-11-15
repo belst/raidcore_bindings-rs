@@ -14,7 +14,8 @@ pub const IMGUI_VERSION_NUM: u32 = 18000;
 pub const NEXUS_API_VERSION: u32 = 1;
 
 #[repr(C)]
-enum ERenderType {
+#[derive(Debug, Clone, Copy)]
+pub enum ERenderType {
     PreRender = 0,
     Render = 1,
     PostRender = 2,
@@ -31,7 +32,7 @@ pub type PathsGetcommondir = unsafe extern "C" fn() -> *const c_char;
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-enum EMHStatus {
+pub enum EMHStatus {
     MhUnknown = -1,
     MhOk = 0,
     MhErrorAlreadyInitialized,
@@ -48,115 +49,116 @@ enum EMHStatus {
     MhErrorFunctionNotFound,
 }
 
-pub type MINHOOK_CREATE =
+pub type MinhookCreate =
     unsafe extern "C" fn(pTarget: LPVOID, pDetour: LPVOID, ppOriginal: *mut LPVOID) -> EMHStatus;
-pub type MINHOOK_REMOVE = unsafe extern "C" fn(pTarget: LPVOID) -> EMHStatus;
-pub type MINHOOK_ENABLE = unsafe extern "C" fn(pTarget: LPVOID) -> EMHStatus;
-pub type MINHOOK_DISABLE = unsafe extern "C" fn(pTarget: LPVOID) -> EMHStatus;
+pub type MinhookRemove = unsafe extern "C" fn(pTarget: LPVOID) -> EMHStatus;
+pub type MinhookEnable = unsafe extern "C" fn(pTarget: LPVOID) -> EMHStatus;
+pub type MinhookDisable = unsafe extern "C" fn(pTarget: LPVOID) -> EMHStatus;
 
 #[repr(C)]
-enum ELogLevel {
-    ELogLevel_OFF = 0,
-    ELogLevel_CRITICAL = 1,
-    ELogLevel_WARNING = 2,
-    ELogLevel_INFO = 3,
-    ELogLevel_DEBUG = 4,
-    ELogLevel_TRACE = 5,
-    ELogLevel_ALL,
+#[derive(Debug, Clone, Copy)]
+pub enum ELogLevel {
+    Off = 0,
+    Critical = 1,
+    Warning = 2,
+    INFO = 3,
+    DEBUG = 4,
+    TRACE = 5,
+    ALL,
 }
 
-pub type LOGGER_LOGA = unsafe extern "C" fn(aLogLevel: ELogLevel, aStr: *const c_char);
-pub type EVENT_CONSUME = unsafe extern "C" fn(aEventArgs: *mut c_void);
-pub type EVENTS_RAISE = unsafe extern "C" fn(aIdentifier: *const c_char, aEventData: *mut c_void);
-pub type EVENTS_SUBSCRIBE =
-    unsafe extern "C" fn(aIdentifier: *const c_char, aConsumeEventCallback: EVENT_CONSUME);
+pub type LoggerLoga = unsafe extern "C" fn(aLogLevel: ELogLevel, aStr: *const c_char);
+pub type EventConsume = unsafe extern "C" fn(aEventArgs: *mut c_void);
+pub type EventsRaise = unsafe extern "C" fn(aIdentifier: *const c_char, aEventData: *mut c_void);
+pub type EventsSubscribe =
+    unsafe extern "C" fn(aIdentifier: *const c_char, aConsumeEventCallback: EventConsume);
 
-pub type WNDPROC_CALLBACK =
+pub type WndprocCallback =
     unsafe extern "C" fn(hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM) -> UINT;
-pub type WNDPROC_ADDREM = unsafe extern "C" fn(aWndProcCallback: WNDPROC_CALLBACK);
+pub type WndprocAddrem = unsafe extern "C" fn(aWndProcCallback: WndprocCallback);
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Keybind {
-    pub Key: c_ushort,
-    pub Alt: bool,
-    pub Ctrl: bool,
-    pub Shift: bool,
+    pub key: c_ushort,
+    pub alt: bool,
+    pub ctrl: bool,
+    pub shift: bool,
 }
 
-pub type KEYBINDS_PROCESS = unsafe extern "C" fn(aIdentifier: *const c_char);
-pub type KEYBINDS_REGISTERWITHSTRING = unsafe extern "C" fn(
+pub type KeybindsProcess = unsafe extern "C" fn(aIdentifier: *const c_char);
+pub type KeybindsRegisterwithstring = unsafe extern "C" fn(
     aIdentifier: *const c_char,
-    aKeybindHandler: KEYBINDS_PROCESS,
+    aKeybindHandler: KeybindsProcess,
     aKeybind: *const c_char,
 );
-pub type KEYBINDS_REGISTERWITHSTRUCT = unsafe extern "C" fn(
+pub type KeybindsRegisterwithstruct = unsafe extern "C" fn(
     aIdentifier: *const c_char,
-    aKeybindHandler: KEYBINDS_PROCESS,
+    aKeybindHandler: KeybindsProcess,
     aKeybind: Keybind,
 );
-pub type KEYBINDS_UNREGISTER = unsafe extern "C" fn(aIdentifier: *const c_char);
+pub type KeybindsUnregister = unsafe extern "C" fn(aIdentifier: *const c_char);
 
-pub type DATALINK_GETRESOURCE = unsafe extern "C" fn(aIdentifier: *const c_char) -> *mut c_void;
-pub type DATALINK_SHARERESOURCE =
+pub type DatalinkGetresource = unsafe extern "C" fn(aIdentifier: *const c_char) -> *mut c_void;
+pub type DatalinkShareresource =
     unsafe extern "C" fn(aIdentifier: *const c_char, aResourceSize: usize) -> *mut c_void;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Texture {
-    pub Width: c_uint,
-    pub Height: c_uint,
+    pub width: c_uint,
+    pub height: c_uint,
     // ID3D11ShaderResourceView* Resource
-    pub Resource: *mut c_void,
+    pub resource: *mut c_void,
 }
 
-pub type TEXTURES_RECEIVECALLBACK =
+pub type TexturesReceivecallback =
     unsafe extern "C" fn(aIdentifier: *const c_char, aTexture: *mut Texture);
-pub type TEXTURES_GET = unsafe extern "C" fn(aIdentifier: *const c_char) -> *mut Texture;
-pub type TEXTURES_LOADFROMFILE = unsafe extern "C" fn(
+pub type TexturesGet = unsafe extern "C" fn(aIdentifier: *const c_char) -> *mut Texture;
+pub type TexturesLoadfromfile = unsafe extern "C" fn(
     aIdentifier: *const c_char,
     aFilename: *const c_char,
-    aCallback: TEXTURES_RECEIVECALLBACK,
+    aCallback: TexturesReceivecallback,
 );
-pub type TEXTURES_LOADFROMRESOURCE = unsafe extern "C" fn(
+pub type TexturesLoadfromresource = unsafe extern "C" fn(
     aIdentifier: *const c_char,
     aResourceID: c_uint,
     aModule: HMODULE,
-    aCallback: TEXTURES_RECEIVECALLBACK,
+    aCallback: TexturesReceivecallback,
 );
-pub type TEXTURES_LOADFROMURL = ::std::option::Option<
+pub type TexturesLoadfromurl = ::std::option::Option<
     unsafe extern "C" fn(
         aIdentifier: *const c_char,
         aRemote: *const c_char,
         aEndpoint: *const c_char,
-        aCallback: TEXTURES_RECEIVECALLBACK,
+        aCallback: TexturesReceivecallback,
     ),
 >;
 
-pub type QUICKACCESS_ADDSHORTCUT = unsafe extern "C" fn(
+pub type QuickaccessAddshortcut = unsafe extern "C" fn(
     aIdentifier: *const c_char,
     aTextureIdentifier: *const c_char,
     aTextureHoverIdentifier: *const c_char,
     aKeybindIdentifier: *const c_char,
     aTooltipText: *const c_char,
 );
-pub type QUICKACCESS_ADDSIMPLE =
-    unsafe extern "C" fn(aIdentifier: *const c_char, aShortcutRenderCallback: GUI_RENDER);
-pub type QUICKACCESS_REMOVE = unsafe extern "C" fn(aIdentifier: *const c_char);
+pub type QuickaccessAddsimple =
+    unsafe extern "C" fn(aIdentifier: *const c_char, aShortcutRenderCallback: GuiRender);
+pub type QuickaccessRemove = unsafe extern "C" fn(aIdentifier: *const c_char);
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct NexusLinkData {
-    pub Width: c_uint,
-    pub Height: c_uint,
-    pub Scaling: f32,
-    pub IsMoving: bool,
-    pub IsCameraMoving: bool,
-    pub IsGameplay: bool,
+    pub width: c_uint,
+    pub height: c_uint,
+    pub scaling: f32,
+    pub is_moving: bool,
+    pub is_camera_moving: bool,
+    pub is_gameplay: bool,
     // ImFont*
-    pub Font: *mut c_void,
-    pub FontBig: *mut c_void,
-    pub FontUI: *mut c_void,
+    pub font: *mut c_void,
+    pub font_big: *mut c_void,
+    pub font_ui: *mut c_void,
 }
 
 // Revision 1
@@ -178,48 +180,48 @@ pub struct AddonAPI {
     pub get_addon_directory: PathsGetaddondir,
     pub get_common_directory: PathsGetcommondir,
     /// Minhook
-    pub CreateHook: MINHOOK_CREATE,
-    pub RemoveHook: MINHOOK_REMOVE,
-    pub EnableHook: MINHOOK_ENABLE,
-    pub DisableHook: MINHOOK_DISABLE,
+    pub create_hook: MinhookCreate,
+    pub remove_hook: MinhookRemove,
+    pub enable_hook: MinhookEnable,
+    pub disable_hook: MinhookDisable,
     /// Logging
-    pub Log: LOGGER_LOGA,
+    pub log: LoggerLoga,
     /// Events
-    pub RaiseEvent: EVENTS_RAISE,
-    pub SubscribeEvent: EVENTS_SUBSCRIBE,
-    pub UnsubscribeEvent: EVENTS_SUBSCRIBE,
+    pub raise_event: EventsRaise,
+    pub subscribe_event: EventsSubscribe,
+    pub unsubscribe_event: EventsSubscribe,
     /// WndProc
-    pub RegisterWndProc: WNDPROC_ADDREM,
-    pub UnregisterWndProc: WNDPROC_ADDREM,
+    pub register_wnd_proc: WndprocAddrem,
+    pub unregister_wnd_proc: WndprocAddrem,
     /// Keybinds
-    pub RegisterKeybindWithString: KEYBINDS_REGISTERWITHSTRING,
-    pub RegisterKeybindWithStruct: KEYBINDS_REGISTERWITHSTRUCT,
-    pub UnregisterKeybind: KEYBINDS_UNREGISTER,
+    pub register_keybind_with_string: KeybindsRegisterwithstring,
+    pub register_keybind_with_struct: KeybindsRegisterwithstruct,
+    pub unregister_keybind: KeybindsUnregister,
     /// DataLink
-    pub GetResource: DATALINK_GETRESOURCE,
-    pub ShareResource: DATALINK_SHARERESOURCE,
+    pub get_resource: DatalinkGetresource,
+    pub share_resource: DatalinkShareresource,
     /// Textures
-    pub GetTexture: TEXTURES_GET,
-    pub LoadTextureFromFile: TEXTURES_LOADFROMFILE,
-    pub LoadTextureFromResource: TEXTURES_LOADFROMRESOURCE,
-    pub LoadTextureFromURL: TEXTURES_LOADFROMURL,
+    pub get_texture: TexturesGet,
+    pub load_texture_from_file: TexturesLoadfromfile,
+    pub load_texture_from_resource: TexturesLoadfromresource,
+    pub load_texture_from_url: TexturesLoadfromurl,
     /// Shortcuts
-    pub AddShortcut: QUICKACCESS_ADDSHORTCUT,
-    pub RemoveShortcut: QUICKACCESS_REMOVE,
-    pub AddSimpleShortcut: QUICKACCESS_ADDSIMPLE,
-    pub RemoveSimpleShortcut: QUICKACCESS_REMOVE,
+    pub add_shortcut: QuickaccessAddshortcut,
+    pub remove_shortcut: QuickaccessRemove,
+    pub add_simple_shortcut: QuickaccessAddsimple,
+    pub remove_simple_shortcut: QuickaccessRemove,
 }
 
-pub type ADDON_LOAD = unsafe extern "C" fn(aAPI: *mut AddonAPI);
-pub type ADDON_UNLOAD = unsafe extern "C" fn();
+pub type AddonLoad = unsafe extern "C" fn(aAPI: *mut AddonAPI);
+pub type AddonUnload = unsafe extern "C" fn();
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct AddonVersion {
-    pub Major: c_short,
-    pub Minor: c_short,
-    pub Build: c_short,
-    pub Revision: c_short,
+    pub major: c_short,
+    pub minor: c_short,
+    pub build: c_short,
+    pub revision: c_short,
 }
 
 #[repr(C)]
@@ -250,24 +252,24 @@ pub enum EUpdateProvider {
 pub struct AddonDefinition {
     /// required
     /// Raidcore Addon ID, set to random unqiue negative integer if not on Raidcore
-    pub Signature: c_int,
+    pub signature: c_int,
     /// Determines which AddonAPI struct revision the Loader will pass, use the NEXUS_API_VERSION define from Nexus.h
-    pub APIVersion: c_int,
+    pub apiversion: c_int,
     /// Name of the addon as shown in the library
-    pub Name: *const c_char,
-    pub Version: AddonVersion,
+    pub name: *const c_char,
+    pub version: AddonVersion,
     /// Author of the addon
-    pub Author: *const c_char,
+    pub author: *const c_char,
     /// Short description
-    pub Description: *const c_char,
+    pub description: *const c_char,
     /// Pointer to Load Function of the addon
-    pub Load: ADDON_LOAD,
+    pub load: AddonLoad,
     /// Pointer to Unload Function of the addon. Not required if EAddonFlags::DisableHotloading is set.
-    pub Unload: ADDON_UNLOAD,
+    pub unload: AddonUnload,
     /// Information about the addon
-    pub Flags: EAddonFlags,
+    pub flags: EAddonFlags,
     /// What platform is the the addon hosted on
-    pub Provider: EUpdateProvider,
+    pub provider: EUpdateProvider,
     /// Link to the update resource
-    pub UpdateLink: *const c_char,
+    pub update_link: *const c_char,
 }

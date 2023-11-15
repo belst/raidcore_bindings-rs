@@ -2,7 +2,7 @@ pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
 
-mod raw_structs;
+pub mod raw_structs;
 
 #[cfg(test)]
 mod tests {
