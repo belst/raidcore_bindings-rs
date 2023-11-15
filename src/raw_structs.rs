@@ -1,5 +1,3 @@
-#![allow(clippy::upper_case_acronyms)]
-
 use std::os::raw::{c_char, c_int, c_short, c_uint, c_ushort, c_void};
 
 pub type HMODULE = *mut c_void;
