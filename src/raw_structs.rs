@@ -1,4 +1,6 @@
+use arcdps_imgui::sys::{ImFont, ImGuiContext};
 use std::os::raw::{c_char, c_int, c_short, c_uint, c_ushort, c_void};
+use winapi::um::d3d11::ID3D11ShaderResourceView;
 
 pub type HMODULE = *mut c_void;
 pub type LPVOID = *mut c_void;
@@ -9,7 +11,7 @@ pub type LPARAM = isize;
 
 // Your addon must use the same IMGUI Version 1.80
 pub const IMGUI_VERSION_NUM: u32 = 18000;
-pub const NEXUS_API_VERSION: u32 = 1;
+pub const NEXUS_API_VERSION: i32 = 1;
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
@@ -106,8 +108,7 @@ pub type DatalinkShareresource =
 pub struct Texture {
     pub width: c_uint,
     pub height: c_uint,
-    // ID3D11ShaderResourceView* Resource
-    pub resource: *mut c_void,
+    pub resource: *mut ID3D11ShaderResourceView,
 }
 
 pub type TexturesReceivecallback =
@@ -124,14 +125,12 @@ pub type TexturesLoadfromresource = unsafe extern "C" fn(
     aModule: HMODULE,
     aCallback: TexturesReceivecallback,
 );
-pub type TexturesLoadfromurl = ::std::option::Option<
-    unsafe extern "C" fn(
-        aIdentifier: *const c_char,
-        aRemote: *const c_char,
-        aEndpoint: *const c_char,
-        aCallback: TexturesReceivecallback,
-    ),
->;
+pub type TexturesLoadfromurl = unsafe extern "C" fn(
+    aIdentifier: *const c_char,
+    aRemote: *const c_char,
+    aEndpoint: *const c_char,
+    aCallback: TexturesReceivecallback,
+);
 
 pub type QuickaccessAddshortcut = unsafe extern "C" fn(
     aIdentifier: *const c_char,
@@ -153,10 +152,9 @@ pub struct NexusLinkData {
     pub is_moving: bool,
     pub is_camera_moving: bool,
     pub is_gameplay: bool,
-    // ImFont*
-    pub font: *mut c_void,
-    pub font_big: *mut c_void,
-    pub font_ui: *mut c_void,
+    pub font: *mut ImFont,
+    pub font_big: *mut ImFont,
+    pub font_ui: *mut ImFont,
 }
 
 // Revision 1
@@ -167,9 +165,9 @@ pub struct AddonAPI {
     // IDXGISwapChain*
     pub swap_chain: *mut c_void,
     // ImGuiContext*
-    pub imgui_context: *mut c_void,
-    pub imgui_malloc: *mut c_void,
-    pub imgui_free: *mut c_void,
+    pub imgui_context: *mut ImGuiContext,
+    pub imgui_malloc: unsafe extern "C" fn(usize, *mut c_void) -> *mut c_void,
+    pub imgui_free: unsafe extern "C" fn(*mut c_void, *mut c_void),
     pub register_render: GuiAddrender,
     pub unregister_render: GuiRemrender,
 
@@ -269,5 +267,5 @@ pub struct AddonDefinition {
     /// What platform is the the addon hosted on
     pub provider: EUpdateProvider,
     /// Link to the update resource
-    pub update_link: *const c_char,
+    pub update_link: Option<*const c_char>,
 }
