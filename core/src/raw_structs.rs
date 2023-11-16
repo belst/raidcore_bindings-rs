@@ -1,4 +1,5 @@
 use arcdps_imgui::sys::{ImFont, ImGuiContext};
+use bitflags::bitflags;
 use std::os::raw::{c_char, c_int, c_short, c_uint, c_ushort, c_void};
 use winapi::um::d3d11::ID3D11ShaderResourceView;
 
@@ -220,14 +221,15 @@ pub struct AddonVersion {
     pub revision: c_short,
 }
 
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub enum EAddonFlags {
-    None = 0,
-    /// is hooking functions or doing anything else that's volatile and game build dependant
-    IsVolatile = 1,
-    /// prevents unloading at runtime, aka. will require a restart if updated, etc.
-    DisableHotloading = 2,
+bitflags! {
+    #[derive(Debug, Copy, Clone)]
+    pub struct EAddonFlags: c_int {
+        const None = 0;
+        /// is hooking functions or doing anything else that's volatile and game build dependant
+        const IsVolatile = 1;
+        /// prevents unloading at runtime, aka. will require a restart if updated, etc.
+        const DisableHotloading = 2;
+    }
 }
 
 #[repr(C)]
@@ -261,7 +263,7 @@ pub struct AddonDefinition {
     /// Pointer to Load Function of the addon
     pub load: AddonLoad,
     /// Pointer to Unload Function of the addon. Not required if EAddonFlags::DisableHotloading is set.
-    pub unload: AddonUnload,
+    pub unload: Option<AddonUnload>,
     /// Information about the addon
     pub flags: EAddonFlags,
     /// What platform is the the addon hosted on
@@ -269,3 +271,5 @@ pub struct AddonDefinition {
     /// Link to the update resource
     pub update_link: Option<*const c_char>,
 }
+
+unsafe impl Sync for AddonDefinition {}

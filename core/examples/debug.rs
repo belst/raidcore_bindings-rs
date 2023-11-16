@@ -57,7 +57,7 @@ pub unsafe extern "C" fn render() {
         .opened(&mut OPENED)
         .begin(ui)
     {
-        ui.text("Tschüss");
+        ui.text("Tschüsssss");
         w.end();
     }
 }
@@ -71,7 +71,7 @@ pub unsafe extern "C" fn render_options() {
 
 #[no_mangle]
 pub extern "C" fn GetAddonDef() -> *mut AddonDefinition {
-    let ad = AddonDefinition {
+    static AD: AddonDefinition = AddonDefinition {
         signature: -42069,
         apiversion: nexus_rs::raw_structs::NEXUS_API_VERSION,
         name: b"MonkaTest\0".as_ptr() as *const c_char,
@@ -84,12 +84,11 @@ pub extern "C" fn GetAddonDef() -> *mut AddonDefinition {
         author: b"belst\0".as_ptr() as *const c_char,
         description: b"whatever\0".as_ptr() as *const c_char,
         load,
-        unload,
+        unload: Some(unload),
         flags: EAddonFlags::None,
         provider: nexus_rs::raw_structs::EUpdateProvider::None,
         update_link: None,
     };
 
-    let ptr = Box::new(ad);
-    Box::leak(ptr)
+    &AD as *const _ as _
 }
