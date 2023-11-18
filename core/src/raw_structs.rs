@@ -1,7 +1,8 @@
 use arcdps_imgui::sys::{ImFont, ImGuiContext};
 use bitflags::bitflags;
 use std::os::raw::{c_char, c_int, c_short, c_uint, c_ushort, c_void};
-use winapi::um::d3d11::ID3D11ShaderResourceView;
+use windows::Win32::Graphics::Direct3D11::ID3D11ShaderResourceView;
+use windows::Win32::Graphics::Dxgi::IDXGISwapChain;
 
 pub type HMODULE = *mut c_void;
 pub type LPVOID = *mut c_void;
@@ -59,9 +60,9 @@ pub type MinhookDisable = unsafe extern "C" fn(pTarget: LPVOID) -> EMHStatus;
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub enum ELogLevel {
-    Off = 0,
-    Critical = 1,
-    Warning = 2,
+    OFF = 0,
+    CRITICAL = 1,
+    WARNING = 2,
     INFO = 3,
     DEBUG = 4,
     TRACE = 5,
@@ -112,6 +113,9 @@ pub struct Texture {
     pub resource: *mut ID3D11ShaderResourceView,
 }
 
+unsafe impl Send for Texture {}
+unsafe impl Sync for Texture {}
+
 pub type TexturesReceivecallback =
     unsafe extern "C" fn(aIdentifier: *const c_char, aTexture: *mut Texture);
 pub type TexturesGet = unsafe extern "C" fn(aIdentifier: *const c_char) -> *mut Texture;
@@ -158,14 +162,15 @@ pub struct NexusLinkData {
     pub font_ui: *mut ImFont,
 }
 
+unsafe impl Sync for NexusLinkData {}
+unsafe impl Send for NexusLinkData {}
+
 // Revision 1
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct AddonAPI {
     /// Renderer
-    // IDXGISwapChain*
-    pub swap_chain: *mut c_void,
-    // ImGuiContext*
+    pub swap_chain: *mut IDXGISwapChain,
     pub imgui_context: *mut ImGuiContext,
     pub imgui_malloc: unsafe extern "C" fn(usize, *mut c_void) -> *mut c_void,
     pub imgui_free: unsafe extern "C" fn(*mut c_void, *mut c_void),
@@ -273,3 +278,4 @@ pub struct AddonDefinition {
 }
 
 unsafe impl Sync for AddonDefinition {}
+unsafe impl Send for AddonDefinition {}
