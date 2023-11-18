@@ -1,7 +1,7 @@
 use arcdps_imgui::{
     self,
     sys::{igSetAllocatorFunctions, igSetCurrentContext},
-    Context, Image, Ui, Window,
+    Context, Image, Slider, Ui, Window,
 };
 use nexus_rs::raw_structs::{
     AddonAPI, AddonDefinition, AddonVersion, EAddonFlags, ELogLevel, ERenderType, NexusLinkData,
@@ -10,6 +10,7 @@ use nexus_rs::raw_structs::{
 use once_cell::sync::Lazy;
 use rand::Rng;
 use std::{
+    arch::x86_64::_SIDD_POSITIVE_POLARITY,
     ffi::{c_char, c_void},
     mem::MaybeUninit,
     ptr,
@@ -52,13 +53,24 @@ unsafe extern "C" fn load(a_api: *mut AddonAPI) {
     (api.load_texture_from_file)(b"ICON_DVD\0" as *const _ as _, p, texture_callback);
     // Add an options window and a regular render callback
     (api.register_render)(ERenderType::Render, render);
+    (api.register_render)(ERenderType::OptionsRender, render_options);
 
     (api.log)(ELogLevel::INFO, b"DVD addon was loaded.\0".as_ptr() as _);
 }
 unsafe extern "C" fn unload() {
     (API.assume_init().unregister_render)(render);
+    (API.assume_init().unregister_render)(render_options);
 }
+static mut SPEED_VAL: i32 = 2;
+static mut SPEED: [i32; 2] = [1, 1];
 
+pub unsafe extern "C" fn render_options() {
+    let ui = UI.assume_init_ref();
+
+    ui.separator();
+    Slider::new("DVD Speed", 1i32, 50).build(&ui, &mut SPEED_VAL);
+    //ui.input_int("DVD Speed", &mut SPEED_VAL).build();
+}
 pub unsafe extern "C" fn render() {
     let ui = UI.assume_init_ref();
     if DVD_ICON.is_none() {
@@ -67,7 +79,6 @@ pub unsafe extern "C" fn render() {
     if NEXUS_DATA.is_none() {
         return;
     }
-    static mut SPEED: [i32; 2] = [2, 2];
     static mut X: Lazy<i32> = Lazy::new(|| unsafe {
         rand::thread_rng().gen_range(0..(NEXUS_DATA.unwrap().width - DVD_ICON.unwrap().width)) as _
     });
@@ -108,8 +119,8 @@ pub unsafe extern "C" fn render() {
         SPEED[1] = -SPEED[1];
         randomize_color();
     }
-    *X += SPEED[0];
-    *Y += SPEED[1];
+    *X += SPEED_VAL * SPEED[0];
+    *Y += SPEED_VAL * SPEED[1];
 }
 
 #[no_mangle]
@@ -120,7 +131,7 @@ pub extern "C" fn GetAddonDef() -> *mut AddonDefinition {
         name: b"DVD\0".as_ptr() as *const c_char,
         version: AddonVersion {
             major: 0,
-            minor: 1,
+            minor: 3,
             build: 0,
             revision: 0,
         },
