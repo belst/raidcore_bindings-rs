@@ -10,7 +10,7 @@ use nexus_rs::raw_structs::{
 use once_cell::sync::Lazy;
 use rand::Rng;
 use std::{
-    ffi::{c_char, c_void, CStr, CString},
+    ffi::{c_char, c_void},
     mem::MaybeUninit,
     ptr,
 };
@@ -45,9 +45,6 @@ unsafe extern "C" fn load(a_api: *mut AddonAPI) {
     }
     // static DVD_ICON_DATA: &'static [u8] = include_bytes!("dvd.png");
     let p: *const i8 = (api.get_addon_directory)(b"/dvd.png\0" as *const _ as _);
-    // let mut full = CStr::from_ptr(p).to_string_lossy().into_owned();
-    // full += "/dvd.png";
-    // let c_str = CString::new(full).unwrap();
 
     unsafe extern "C" fn texture_callback(_: *const i8, text: *mut Texture) {
         DVD_ICON = Some(&*text);
@@ -78,7 +75,14 @@ pub unsafe extern "C" fn render() {
         rand::thread_rng().gen_range(0..(NEXUS_DATA.unwrap().height - DVD_ICON.unwrap().height))
             as _
     });
+    static mut TINT_COLOR: [f32; 4] = [0., 0., 0., 1.];
 
+    unsafe fn randomize_color() {
+        let mut rng = rand::thread_rng();
+        TINT_COLOR[0] = rng.gen_range(0. ..=1.);
+        TINT_COLOR[1] = rng.gen_range(0. ..=1.);
+        TINT_COLOR[2] = rng.gen_range(0. ..=1.);
+    }
     if NEXUS_DATA.unwrap().is_gameplay {
         return;
     }
@@ -92,14 +96,17 @@ pub unsafe extern "C" fn render() {
             (DVD_ICON.unwrap().resource).into(),
             [DVD_ICON.unwrap().width as _, DVD_ICON.unwrap().height as _],
         )
+        .tint_col(TINT_COLOR)
         .build(ui);
         w.end();
     }
     if *X <= 0 || *X >= NEXUS_DATA.unwrap().width as i32 - DVD_ICON.unwrap().width as i32 {
         SPEED[0] = -SPEED[0];
+        randomize_color();
     }
     if *Y <= 0 || *Y >= NEXUS_DATA.unwrap().height as i32 - DVD_ICON.unwrap().height as i32 {
         SPEED[1] = -SPEED[1];
+        randomize_color();
     }
     *X += SPEED[0];
     *Y += SPEED[1];
