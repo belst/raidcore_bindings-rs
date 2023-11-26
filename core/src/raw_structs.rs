@@ -1,6 +1,7 @@
 use arcdps_imgui::sys::{ImFont, ImGuiContext};
 use bitflags::bitflags;
 use std::os::raw::{c_char, c_int, c_short, c_uint, c_ushort, c_void};
+use std::ptr::NonNull;
 use windows::Win32::Graphics::Direct3D11::ID3D11ShaderResourceView;
 use windows::Win32::Graphics::Dxgi::IDXGISwapChain;
 
@@ -218,7 +219,7 @@ pub type AddonLoad = unsafe extern "C" fn(aAPI: *mut AddonAPI);
 pub type AddonUnload = unsafe extern "C" fn();
 
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Default)]
 pub struct AddonVersion {
     pub major: c_short,
     pub minor: c_short,
@@ -238,9 +239,10 @@ bitflags! {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub enum EUpdateProvider {
     /// Does not support auto updating
+    #[default]
     None = 0,
     /// Provider is Raidcore (via API)
     Raidcore = 1,
@@ -268,13 +270,13 @@ pub struct AddonDefinition {
     /// Pointer to Load Function of the addon
     pub load: AddonLoad,
     /// Pointer to Unload Function of the addon. Not required if EAddonFlags::DisableHotloading is set.
-    pub unload: Option<AddonUnload>,
+    pub unload: Option<NonNull<AddonUnload>>,
     /// Information about the addon
     pub flags: EAddonFlags,
     /// What platform is the the addon hosted on
     pub provider: EUpdateProvider,
     /// Link to the update resource
-    pub update_link: Option<*const c_char>,
+    pub update_link: Option<NonNull<*const c_char>>,
 }
 
 unsafe impl Sync for AddonDefinition {}
